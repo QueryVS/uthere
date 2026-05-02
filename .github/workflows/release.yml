@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Test, package, and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install test dependencies
+        run: python -m pip install -e '.[test]'
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          package_version="$(python -c 'from uthere import __version__; print(__version__)')"
+          if [[ "${version}" != "${package_version}" ]]; then
+            echo "Tag version (${version}) does not match package version (${package_version})." >&2
+            exit 1
+          fi
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Generate packaging files
+        run: |
+          uthere-packager \
+            --version "${{ steps.version.outputs.version }}" \
+            --output-dir dist/packages \
+            all
+
+      - name: Build release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ steps.version.outputs.version }}"
+          mkdir -p dist/release-assets
+
+          git archive \
+            --format=tar.gz \
+            --prefix="uthere-${version}/" \
+            -o "dist/release-assets/uthere-${version}-source.tar.gz" \
+            "${GITHUB_REF_NAME}"
+
+          tar -C "dist/packages/debian" \
+            -czf "dist/release-assets/uthere-${version}-debian-packaging.tar.gz" \
+            "uthere-${version}"
+
+          tar -C "dist/packages/fedora" \
+            -czf "dist/release-assets/uthere-${version}-fedora-packaging.tar.gz" \
+            "SPECS" "SOURCES"
+
+          tar -C "dist/packages/gentoo" \
+            -czf "dist/release-assets/uthere-${version}-gentoo-overlay.tar.gz" \
+            "uthere-${version}.ebuild" "files"
+
+          sha256sum dist/release-assets/* > "dist/release-assets/SHA256SUMS"
+
+      - name: Upload CI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-${{ github.ref_name }}
+          path: dist/release-assets/*
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: uthere ${{ github.ref_name }}
+          generate_release_notes: true
+          files: dist/release-assets/*

@@ -1,0 +1,21 @@
+[project]
+name = "uthere"
+version = "0.1.0"
+description = "Small CLI and service for ping/http health checks."
+requires-python = ">=3.10"
+license = "GPL-3.0-only"
+dependencies = []
+
+[project.scripts]
+uthere = "uthere.cli:main"
+uthere-packager = "uthere.packager:main"
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

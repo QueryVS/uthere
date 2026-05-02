@@ -1,0 +1,28 @@
+# Python bytecode/cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python packaging/build outputs
+*.egg-info/
+build/
+dist/
+wheelhouse/
+
+# Local databases/state
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Local editor/runtime files
+.codex-session.txt
+.env
+.env.*
+!.env.example

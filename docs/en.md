@@ -427,7 +427,7 @@ git push origin v0.1.0
 ```
 
 The tag version must match `uthere.__version__`. Beta tags such as
-`1.0.0-beta` are normalized to the Python package version `1.0.0b0`.
+`1.0.1-beta` are normalized to the Python package version `1.0.1b0`.
 
 The workflow also publishes Docker images to GitHub Container Registry:
 

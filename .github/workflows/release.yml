@@ -38,12 +38,16 @@ jobs:
         run: |
           tag="${GITHUB_REF_NAME}"
           version="${tag#v}"
+          normalized_version="${version}"
+          normalized_version="${normalized_version/-beta/b0}"
+          normalized_version="${normalized_version/-alpha/a0}"
+          normalized_version="${normalized_version/-rc/rc}"
           package_version="$(python -c 'from uthere import __version__; print(__version__)')"
-          if [[ "${version}" != "${package_version}" ]]; then
-            echo "Tag version (${version}) does not match package version (${package_version})." >&2
+          if [[ "${normalized_version}" != "${package_version}" ]]; then
+            echo "Tag version (${version}, normalized: ${normalized_version}) does not match package version (${package_version})." >&2
             exit 1
           fi
-          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "version=${normalized_version}" >> "${GITHUB_OUTPUT}"
 
       - name: Resolve Docker image name
         id: image

@@ -386,8 +386,8 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-Tag versiyonu `uthere.__version__` ile aynı olmalıdır. Örneğin `v0.1.0` tag'i
-için paket versiyonu `0.1.0` olmalıdır.
+Tag versiyonu `uthere.__version__` ile aynı olmalıdır. `1.0.0-beta` gibi beta
+tag'leri Python paket versiyonu olan `1.0.0b0` değerine normalize edilir.
 
 Workflow ayrıca GitHub Container Registry'ye Docker image yayınlar:
 

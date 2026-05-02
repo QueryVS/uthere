@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+import os
 from pathlib import Path
 from typing import Any
 
@@ -36,8 +37,11 @@ ON monitors(enabled, last_checked_at);
 
 
 def default_db_path() -> Path:
-    user_default = Path.home() / ".local" / "state" / "uthere" / "uthere.db"
-    return Path(get_setting("UTHERE_DB", str(user_default))).expanduser()
+    if os.geteuid() == 0:
+        default = Path("/var/lib/uthere/uthere.db")
+    else:
+        default = Path.home() / ".local" / "state" / "uthere" / "uthere.db"
+    return Path(get_setting("UTHERE_DB", str(default))).expanduser()
 
 
 def connect(path: str | Path | None = None) -> sqlite3.Connection:

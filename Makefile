@@ -1,14 +1,16 @@
 SHELL := /bin/bash
 
 PYTHON ?= python3
-DB ?= $(HOME)/.local/state/uthere/uthere.db
+DB ?= /var/lib/uthere/uthere.db
 SOCKET ?= /tmp/uthere.sock
 
-.PHONY: help install run clean reset test package
+.PHONY: help install install-root install-user run clean reset test package docker-build
 
 help:
 	@echo "Targets:"
-	@echo "  make install  Install uthere as a systemd service via scripts/install-systemd.sh"
+	@echo "  make install       Show install mode choices"
+	@echo "  make install-root  Install uthere as a root/systemd service"
+	@echo "  make install-user  Install uthere into the current user's home directory"
 	@echo "  make run      Run the service in the foreground"
 	@echo "  make clean    Remove local build, test, and Python cache files"
 	@echo "  make reset    Clean and remove the local development DB/socket"
@@ -20,7 +22,15 @@ help:
 	@echo "  SOCKET=$(SOCKET)"
 
 install:
-	sudo scripts/install-systemd.sh
+	@echo "Choose an install mode:"
+	@echo "  make install-root  # root/systemd service, continuous background checks"
+	@echo "  make install-user  # user-home CLI install, runs only when called"
+
+install-root:
+	su -l -c scripts/install-systemd.sh
+
+install-user:
+	scripts/install-systemd.sh
 
 run:
 	PYTHONPATH=src UTHERE_DB="$(DB)" UTHERE_SOCKET="$(SOCKET)" $(PYTHON) -m uthere serve
@@ -38,3 +48,12 @@ test:
 
 package:
 	PYTHONPATH=src $(PYTHON) -m uthere.packager all
+
+docker-build:
+	docker build -t uthere:latest .
+
+docker-run:
+	docker run --rm -d -v uthere-data:/var/lib/uthere uthere:latest
+
+docker-cli:
+	docker run -it uthere bash

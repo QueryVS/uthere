@@ -104,7 +104,8 @@ The `uthere-packager` command generates packaging files for:
 
 The GitHub Actions release workflow runs only on tag pushes matching `v*`. It
 runs tests, verifies the tag version against `uthere.__version__`, generates
-packaging files, creates release archives, and uploads them to a GitHub Release.
+packaging files, creates release archives, uploads them to a GitHub Release,
+and publishes a Docker image to GitHub Container Registry.
 
 ## Installation
 
@@ -148,6 +149,39 @@ The installer:
 - Writes `/etc/default/uthere`.
 - Writes `/etc/systemd/system/uthere.service`.
 - Enables and starts the service.
+
+Systemd installation is system mode. The service runs as `root` by default,
+uses `/var/lib/uthere/uthere.db`, and reads configuration from
+`/etc/default/uthere`. Use `sudo uthere ...` for CLI commands that read or write
+the service database:
+
+```bash
+sudo uthere add example.com --type ping --interval 60
+sudo uthere list
+sudo uthere check all
+```
+
+To run the service as another user:
+
+```bash
+sudo UTHERE_SERVICE_USER=anc scripts/install-systemd.sh
+```
+
+### User-Mode Installation
+
+```bash
+scripts/install-systemd.sh
+```
+
+When the installer is run without root privileges, it installs only the CLI into
+the current user's home directory:
+
+- Binary: `~/.local/bin/uthere`
+- Config: `~/.config/uthere/uthere.env`
+- Database: `~/.local/state/uthere/uthere.db`
+
+User mode is not a background service. It only runs when a user calls a command.
+Use system mode for continuous interval checks.
 
 Check service status:
 
@@ -340,6 +374,49 @@ If native build tools are installed:
 uthere-packager all --build
 ```
 
+## Docker
+
+```bash
+docker build -t uthere:latest .
+docker volume create uthere-data
+docker run -d --name uthere --restart unless-stopped -v uthere-data:/var/lib/uthere uthere:latest
+```
+
+The container runs `uthere serve` as the foreground executable. It continuously
+checks registered records while the container is running.
+Unhealthy or invalid records should not stop the container; they are recorded as
+`unhealthy` with the error message in the database.
+
+Use `docker exec` to manage records inside the already-running container:
+
+```bash
+docker exec uthere uthere add example.com --type ping --interval 60
+docker exec uthere uthere list
+docker exec uthere uthere check all
+docker exec -it uthere sh
+```
+
+Do not use a second `docker run` just to enter the container; that creates a new
+container. If that new container does not mount the same `uthere-data` volume,
+it will have a fresh empty SQLite database.
+
+Docker Compose:
+
+```bash
+docker compose up -d
+docker compose exec uthere uthere add example.com --type ping --interval 60
+docker compose exec uthere uthere list
+docker compose logs -f uthere
+```
+
+Release images are published to GitHub Container Registry:
+
+```text
+ghcr.io/<owner>/<repo>:v0.1.0
+ghcr.io/<owner>/<repo>:0.1.0
+ghcr.io/<owner>/<repo>:latest
+```
+
 ## Release CI
 
 The release workflow runs only when a tag is pushed:
@@ -351,3 +428,11 @@ git push origin v0.1.0
 
 The tag version must match `uthere.__version__`. For tag `v0.1.0`, the package
 version must be `0.1.0`.
+
+The workflow also publishes Docker images to GitHub Container Registry:
+
+```text
+ghcr.io/<owner>/<repo>:v0.1.0
+ghcr.io/<owner>/<repo>:0.1.0
+ghcr.io/<owner>/<repo>:latest
+```

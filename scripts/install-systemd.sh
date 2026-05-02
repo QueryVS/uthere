@@ -3,18 +3,6 @@ set -euo pipefail
 
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV_DIR="${APP_DIR}/.venv"
-SERVICE_FILE="/etc/systemd/system/uthere.service"
-ENV_FILE="/etc/default/uthere"
-BIN_FILE="/usr/local/bin/uthere"
-DB_PATH="${UTHERE_DB:-/var/lib/uthere/uthere.db}"
-
-if [[ "${EUID}" -ne 0 ]]; then
-  echo "Run this script with sudo: sudo scripts/install-systemd.sh" >&2
-  exit 1
-fi
-
-SERVICE_USER="${SUDO_USER:-${USER}}"
-SERVICE_GROUP="$(id -gn "${SERVICE_USER}")"
 
 if ! python3 -m venv "${VENV_DIR}"; then
   cat >&2 <<'EOF'
@@ -38,7 +26,59 @@ fi
 "${VENV_DIR}/bin/pip" install --upgrade pip
 "${VENV_DIR}/bin/pip" install -e "${APP_DIR}"
 
+if [[ "${EUID}" -ne 0 ]]; then
+  USER_ENV_DIR="${HOME}/.config/uthere"
+  USER_BIN_DIR="${HOME}/.local/bin"
+  USER_STATE_DIR="${HOME}/.local/state/uthere"
+  USER_ENV_FILE="${USER_ENV_DIR}/uthere.env"
+  USER_BIN_FILE="${USER_BIN_DIR}/uthere"
+  USER_DB_PATH="${UTHERE_DB:-${USER_STATE_DIR}/uthere.db}"
+  USER_SOCKET_PATH="${UTHERE_SOCKET:-/tmp/uthere-${USER}.sock}"
+
+  install -d -m 0755 "${USER_ENV_DIR}" "${USER_BIN_DIR}" "${USER_STATE_DIR}"
+
+  cat > "${USER_ENV_FILE}" <<EOF
+UTHERE_DB=${USER_DB_PATH}
+UTHERE_SOCKET=${USER_SOCKET_PATH}
+
+# Alert channels: mail,telegram,whatsapp or a comma-separated combination.
+# UTHERE_ALERT_CHANNELS=
+# UTHERE_ALERT_MODE=on_change
+EOF
+
+  cat > "${USER_BIN_FILE}" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ -f "\${HOME}/.config/uthere/uthere.env" ]]; then
+  set -a
+  . "\${HOME}/.config/uthere/uthere.env"
+  set +a
+fi
+exec "${VENV_DIR}/bin/uthere" "\$@"
+EOF
+  chmod 0755 "${USER_BIN_FILE}"
+
+  echo "uthere user-mode CLI installed."
+  echo "Binary: ${USER_BIN_FILE}"
+  echo "Config: ${USER_ENV_FILE}"
+  echo "Database: ${USER_DB_PATH}"
+  echo "Socket: ${USER_SOCKET_PATH}"
+  echo "This is not a background service. It only runs when you call uthere commands."
+  echo "For continuous background checks, install system mode with: sudo scripts/install-systemd.sh"
+  exit 0
+fi
+
+SERVICE_FILE="/etc/systemd/system/uthere.service"
+ENV_FILE="/etc/default/uthere"
+BIN_FILE="/usr/local/bin/uthere"
+DB_PATH="${UTHERE_DB:-/var/lib/uthere/uthere.db}"
+SERVICE_USER="${UTHERE_SERVICE_USER:-root}"
+SERVICE_GROUP="$(id -gn "${SERVICE_USER}")"
+
 install -d -o "${SERVICE_USER}" -g "${SERVICE_GROUP}" -m 0755 "$(dirname "${DB_PATH}")"
+touch "${DB_PATH}"
+chown "${SERVICE_USER}:${SERVICE_GROUP}" "${DB_PATH}"
+chmod 0644 "${DB_PATH}"
 
 cat > "${ENV_FILE}" <<EOF
 UTHERE_DB=${DB_PATH}
@@ -107,3 +147,7 @@ echo "Status: systemctl status uthere"
 echo "Logs: journalctl -u uthere -f"
 echo "CLI: uthere list"
 echo "Database: ${DB_PATH}"
+echo "Service user: ${SERVICE_USER}"
+if [[ "${SERVICE_USER}" == "root" ]]; then
+  echo "Use sudo for CLI commands that write to the service database, for example: sudo uthere list"
+fi

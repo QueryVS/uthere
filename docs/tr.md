@@ -106,7 +106,8 @@ gönderilir. Her başarısız kontrolde mesaj göndermek için
 GitHub Actions release workflow'u sadece `v*` ile eşleşen tag push olayında
 çalışır. Testleri çalıştırır, tag versiyonunu `uthere.__version__` ile
 karşılaştırır, paketleme dosyalarını üretir, release arşivlerini hazırlar ve
-GitHub Release'e yükler.
+GitHub Release'e yükler. Ayrıca Docker image build edip GitHub Container
+Registry'ye yayınlar.
 
 ## Kurulum
 
@@ -151,6 +152,39 @@ Kurulum betiği şunları yapar:
 - `/etc/default/uthere` dosyasını yazar.
 - `/etc/systemd/system/uthere.service` dosyasını yazar.
 - Servisi enable edip başlatır.
+
+Systemd kurulumu sistem modudur. Servis varsayılan olarak `root` kullanıcısıyla
+çalışır, `/var/lib/uthere/uthere.db` veritabanını kullanır ve ayarları
+`/etc/default/uthere` dosyasından okur. Servis veritabanını okuyan veya yazan CLI
+komutları için `sudo uthere ...` kullanın:
+
+```bash
+sudo uthere add example.com --type ping --interval 60
+sudo uthere list
+sudo uthere check all
+```
+
+Servisi farklı bir kullanıcıyla çalıştırmak için:
+
+```bash
+sudo UTHERE_SERVICE_USER=anc scripts/install-systemd.sh
+```
+
+### Kullanıcı Modu Kurulumu
+
+```bash
+scripts/install-systemd.sh
+```
+
+Kurulum betiği root yetkisi olmadan çalıştırılırsa sadece CLI'yi mevcut
+kullanıcının home dizinine kurar:
+
+- Binary: `~/.local/bin/uthere`
+- Config: `~/.config/uthere/uthere.env`
+- Veritabanı: `~/.local/state/uthere/uthere.db`
+
+Kullanıcı modu arka plan servisi değildir. Sadece kullanıcı komut çağırdığında
+çalışır. Sürekli interval kontrolü için system mode kurulumu kullanılmalıdır.
 
 Servis durumunu kontrol etmek için:
 
@@ -354,3 +388,54 @@ git push origin v0.1.0
 
 Tag versiyonu `uthere.__version__` ile aynı olmalıdır. Örneğin `v0.1.0` tag'i
 için paket versiyonu `0.1.0` olmalıdır.
+
+Workflow ayrıca GitHub Container Registry'ye Docker image yayınlar:
+
+```text
+ghcr.io/<owner>/<repo>:v0.1.0
+ghcr.io/<owner>/<repo>:0.1.0
+ghcr.io/<owner>/<repo>:latest
+```
+
+## Docker
+
+```bash
+docker build -t uthere:latest .
+docker volume create uthere-data
+docker run -d --name uthere --restart unless-stopped -v uthere-data:/var/lib/uthere uthere:latest
+```
+
+Container `uthere serve` komutunu foreground executable olarak çalıştırır.
+Container çalıştığı sürece kayıtları sürekli kontrol eder.
+Unhealthy veya hatalı kayıtlar container'ı durdurmamalıdır; veritabanına
+`unhealthy` olarak ve hata mesajıyla kaydedilir.
+
+Kayıt eklemek/listelemek için çalışan container üzerinde `docker exec` kullanın:
+
+```bash
+docker exec uthere uthere add example.com --type ping --interval 60
+docker exec uthere uthere list
+docker exec uthere uthere check all
+docker exec -it uthere sh
+```
+
+Container içine girmek için ikinci bir `docker run` kullanmayın; bu yeni bir
+container oluşturur. Yeni container aynı `uthere-data` volume'unu mount etmezse
+yeni ve boş bir SQLite veritabanı kullanır.
+
+Docker Compose:
+
+```bash
+docker compose up -d
+docker compose exec uthere uthere add example.com --type ping --interval 60
+docker compose exec uthere uthere list
+docker compose logs -f uthere
+```
+
+Release image'ları GitHub Container Registry'ye yayınlanır:
+
+```text
+ghcr.io/<owner>/<repo>:v0.1.0
+ghcr.io/<owner>/<repo>:0.1.0
+ghcr.io/<owner>/<repo>:latest
+```

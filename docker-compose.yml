@@ -1,0 +1,14 @@
+services:
+  uthere:
+    build: .
+    image: uthere:latest
+    container_name: uthere
+    restart: unless-stopped
+    environment:
+      UTHERE_DB: /var/lib/uthere/uthere.db
+      UTHERE_SOCKET: /tmp/uthere.sock
+    volumes:
+      - uthere-data:/var/lib/uthere
+
+volumes:
+  uthere-data:

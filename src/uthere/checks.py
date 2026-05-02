@@ -18,11 +18,16 @@ class CheckResult:
 
 
 def run_check(monitor: dict[str, Any]) -> CheckResult:
-    if monitor["check_type"] == "ping":
-        return ping(monitor["target"], float(monitor["timeout_seconds"]))
-    if monitor["check_type"] == "http":
-        return http(monitor["target"], float(monitor["timeout_seconds"]))
-    return CheckResult(False, 0, error=f"Unknown check type: {monitor['check_type']}")
+    started = time.monotonic()
+    try:
+        if monitor["check_type"] == "ping":
+            return ping(monitor["target"], float(monitor["timeout_seconds"]))
+        if monitor["check_type"] == "http":
+            return http(monitor["target"], float(monitor["timeout_seconds"]))
+        return CheckResult(False, 0, error=f"Unknown check type: {monitor['check_type']}")
+    except Exception as exc:
+        latency_ms = (time.monotonic() - started) * 1000
+        return CheckResult(False, latency_ms, error=f"{type(exc).__name__}: {str(exc)[:260]}")
 
 
 def ping(target: str, timeout_seconds: float) -> CheckResult:

@@ -9,6 +9,12 @@ and URL health with ping or HTTP checks. It stores monitors in SQLite, wakes the
 service when records change, and can send alerts through mail, Telegram, and
 WhatsApp when a monitor becomes unhealthy.
 
+## Demo
+
+<p align="center">
+  <img src="assert/uthere-using.gif" alt="uthere CLI demo" width="100%">
+</p>
+
 ## Documentation
 
 - [English documentation](docs/en.md)

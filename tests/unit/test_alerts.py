@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import os
 from types import SimpleNamespace
 
 import pytest
 
-from uthere.alerts import AlertConfig, format_alert_message, parse_csv, should_alert
+from uthere.alerts import AlertConfig, format_alert_message, parse_channels, parse_csv, should_alert
 
 
 def config(*, channels=("telegram",), mode="on_change"):
@@ -30,6 +31,33 @@ def config(*, channels=("telegram",), mode="on_change"):
 
 def test_parse_csv_strips_empty_items():
     assert parse_csv("mail, telegram,,whatsapp ") == ("mail", "telegram", "whatsapp")
+
+
+def test_parse_channels_normalizes_names():
+    assert parse_channels("Mail, Telegram") == ("mail", "telegram")
+
+
+def test_alert_config_reads_env_file(tmp_path, monkeypatch):
+    for key in tuple(os.environ):
+        if key.startswith("UTHERE_"):
+            monkeypatch.delenv(key, raising=False)
+    env_file = tmp_path / "uthere.env"
+    env_file.write_text(
+        "\n".join(
+            [
+                "UTHERE_ALERT_CHANNELS=Telegram",
+                "UTHERE_TELEGRAM_BOT_TOKEN=token",
+                "UTHERE_TELEGRAM_CHAT_ID=12345",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    config = AlertConfig.from_env((env_file,))
+
+    assert config.channels == ("telegram",)
+    assert config.telegram_bot_token == "token"
+    assert config.telegram_chat_ids == ("12345",)
 
 
 @pytest.mark.parametrize(

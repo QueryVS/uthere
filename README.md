@@ -149,6 +149,28 @@ The CLI reads `UTHERE_DB` from the environment and, if available, from
 If `uthere check` reports that SQLite is read-only, fix the database ownership
 or use the same database path as the service.
 
+Telegram alerts require the channel to be enabled as well as the token and chat
+ID:
+
+```bash
+UTHERE_ALERT_CHANNELS=telegram
+UTHERE_TELEGRAM_BOT_TOKEN=123456:token
+UTHERE_TELEGRAM_CHAT_ID=123456789
+```
+
+Multiple alert channels can be enabled with a comma-separated list:
+
+```bash
+UTHERE_ALERT_CHANNELS=mail,telegram,whatsapp
+```
+
+After changing `/etc/default/uthere`, restart the service:
+
+```bash
+su -c 'systemctl restart uthere'
+uthere alert-test
+```
+
 Run tests:
 
 ```bash

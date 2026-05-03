@@ -118,6 +118,7 @@ def test_alert_test_without_channel_returns_usage_error(monkeypatch, capsys):
     for key in tuple(os.environ):
         if key.startswith("UTHERE_ALERT_"):
             monkeypatch.delenv(key, raising=False)
+    monkeypatch.setattr("uthere.alerts.ENV_FILES", ())
 
     assert main(["alert-test"]) == 2
     assert "No alert channel selected" in capsys.readouterr().err

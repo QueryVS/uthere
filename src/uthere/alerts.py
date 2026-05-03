@@ -8,7 +8,10 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from email.message import EmailMessage
+from pathlib import Path
 from typing import Any
+
+from .config import ENV_FILES, get_setting
 
 
 @dataclass(frozen=True)
@@ -31,24 +34,26 @@ class AlertConfig:
     whatsapp_api_url: str | None
 
     @classmethod
-    def from_env(cls) -> "AlertConfig":
+    def from_env(cls, env_files: tuple[Path, ...] | None = None) -> "AlertConfig":
+        if env_files is None:
+            env_files = ENV_FILES
         return cls(
-            channels=parse_csv(os.environ.get("UTHERE_ALERT_CHANNELS", "")),
-            mode=os.environ.get("UTHERE_ALERT_MODE", "on_change").strip().lower(),
-            mail_host=empty_to_none(os.environ.get("UTHERE_MAIL_HOST")),
-            mail_port=int(os.environ.get("UTHERE_MAIL_PORT", "587")),
-            mail_user=empty_to_none(os.environ.get("UTHERE_MAIL_USER")),
-            mail_password=empty_to_none(os.environ.get("UTHERE_MAIL_PASSWORD")),
-            mail_from=empty_to_none(os.environ.get("UTHERE_MAIL_FROM")),
-            mail_to=parse_csv(os.environ.get("UTHERE_MAIL_TO", "")),
-            mail_tls=os.environ.get("UTHERE_MAIL_TLS", "starttls").strip().lower(),
-            telegram_bot_token=empty_to_none(os.environ.get("UTHERE_TELEGRAM_BOT_TOKEN")),
-            telegram_chat_ids=parse_csv(os.environ.get("UTHERE_TELEGRAM_CHAT_ID", "")),
-            whatsapp_token=empty_to_none(os.environ.get("UTHERE_WHATSAPP_TOKEN")),
-            whatsapp_phone_number_id=empty_to_none(os.environ.get("UTHERE_WHATSAPP_PHONE_NUMBER_ID")),
-            whatsapp_to=parse_csv(os.environ.get("UTHERE_WHATSAPP_TO", "")),
-            whatsapp_api_version=os.environ.get("UTHERE_WHATSAPP_API_VERSION", "v20.0").strip(),
-            whatsapp_api_url=empty_to_none(os.environ.get("UTHERE_WHATSAPP_API_URL")),
+            channels=parse_channels(get_setting("UTHERE_ALERT_CHANNELS", "", env_files)),
+            mode=get_setting("UTHERE_ALERT_MODE", "on_change", env_files).strip().lower(),
+            mail_host=empty_to_none(get_setting("UTHERE_MAIL_HOST", "", env_files)),
+            mail_port=int(get_setting("UTHERE_MAIL_PORT", "587", env_files)),
+            mail_user=empty_to_none(get_setting("UTHERE_MAIL_USER", "", env_files)),
+            mail_password=empty_to_none(get_setting("UTHERE_MAIL_PASSWORD", "", env_files)),
+            mail_from=empty_to_none(get_setting("UTHERE_MAIL_FROM", "", env_files)),
+            mail_to=parse_csv(get_setting("UTHERE_MAIL_TO", "", env_files)),
+            mail_tls=get_setting("UTHERE_MAIL_TLS", "starttls", env_files).strip().lower(),
+            telegram_bot_token=empty_to_none(get_setting("UTHERE_TELEGRAM_BOT_TOKEN", "", env_files)),
+            telegram_chat_ids=parse_csv(get_setting("UTHERE_TELEGRAM_CHAT_ID", "", env_files)),
+            whatsapp_token=empty_to_none(get_setting("UTHERE_WHATSAPP_TOKEN", "", env_files)),
+            whatsapp_phone_number_id=empty_to_none(get_setting("UTHERE_WHATSAPP_PHONE_NUMBER_ID", "", env_files)),
+            whatsapp_to=parse_csv(get_setting("UTHERE_WHATSAPP_TO", "", env_files)),
+            whatsapp_api_version=get_setting("UTHERE_WHATSAPP_API_VERSION", "v20.0", env_files).strip(),
+            whatsapp_api_url=empty_to_none(get_setting("UTHERE_WHATSAPP_API_URL", "", env_files)),
         )
 
     @property
@@ -58,6 +63,10 @@ class AlertConfig:
 
 def parse_csv(value: str) -> tuple[str, ...]:
     return tuple(item.strip() for item in value.split(",") if item.strip())
+
+
+def parse_channels(value: str) -> tuple[str, ...]:
+    return tuple(item.lower() for item in parse_csv(value))
 
 
 def empty_to_none(value: str | None) -> str | None:

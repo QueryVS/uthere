@@ -270,6 +270,10 @@ UTHERE_ALERT_CHANNELS=whatsapp
 UTHERE_ALERT_CHANNELS=mail,telegram,whatsapp
 ```
 
+Use a comma-separated list to send the same alert to multiple channels. If one
+channel fails, uthere logs that channel error and still tries the remaining
+channels.
+
 ### Alert Mode
 
 ```bash
@@ -298,6 +302,9 @@ UTHERE_TELEGRAM_BOT_TOKEN=123456:token
 UTHERE_TELEGRAM_CHAT_ID=123456789
 ```
 
+`UTHERE_ALERT_CHANNELS=telegram` is required. Setting only the bot token and
+chat ID does not enable the Telegram channel.
+
 ### WhatsApp
 
 WhatsApp support uses the Meta WhatsApp Cloud API format.
@@ -322,6 +329,10 @@ restart the service:
 ```bash
 su -c 'systemctl restart uthere'
 ```
+
+The CLI also reads `/etc/default/uthere`, `/etc/sysconfig/uthere`, and
+`/etc/conf.d/uthere`, so `uthere alert-test` can validate the same alert
+settings before waiting for a failed monitor.
 
 ## Testing
 

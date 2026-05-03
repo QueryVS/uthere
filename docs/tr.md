@@ -273,6 +273,10 @@ UTHERE_ALERT_CHANNELS=whatsapp
 UTHERE_ALERT_CHANNELS=mail,telegram,whatsapp
 ```
 
+Aynı uyarıyı birden fazla kanala göndermek için kanalları virgülle ayırın. Bir
+kanal hata verirse uthere o kanal hatasını loglar ve kalan kanalları denemeye
+devam eder.
+
 ### Uyarı Modu
 
 ```bash
@@ -301,6 +305,9 @@ UTHERE_TELEGRAM_BOT_TOKEN=123456:token
 UTHERE_TELEGRAM_CHAT_ID=123456789
 ```
 
+`UTHERE_ALERT_CHANNELS=telegram` zorunludur. Sadece bot token ve chat ID yazmak
+Telegram kanalını aktif etmez.
+
 ### WhatsApp
 
 WhatsApp desteği Meta WhatsApp Cloud API formatını kullanır.
@@ -325,6 +332,10 @@ sonrasında servis yeniden başlatılır:
 ```bash
 su -c 'systemctl restart uthere'
 ```
+
+CLI ayrıca `/etc/default/uthere`, `/etc/sysconfig/uthere` ve
+`/etc/conf.d/uthere` dosyalarını okur. Bu yüzden hatalı bir kayıt beklemeden
+`uthere alert-test` ile aynı uyarı ayarlarını test edebilirsiniz.
 
 ## Test
 

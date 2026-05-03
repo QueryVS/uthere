@@ -158,6 +158,10 @@ UTHERE_TELEGRAM_BOT_TOKEN=123456:token
 UTHERE_TELEGRAM_CHAT_ID=123456789
 ```
 
+<p align="center">
+  <img src="assert/telegram-uthere.jpg" alt="uthere Telegram alert example" width="360">
+</p>
+
 Multiple alert channels can be enabled with a comma-separated list:
 
 ```bash

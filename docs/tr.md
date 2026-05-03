@@ -123,7 +123,7 @@ Debian/Ubuntu üzerinde `externally-managed-environment` hatası alırsanız,
 `pip install` komutunu sistem Python'unda çalıştırıyorsunuz demektir. Çözüm:
 
 ```bash
-sudo apt install python3-venv python3-full
+su -c 'apt install python3-venv python3-full'
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -e '.[test]'
@@ -132,7 +132,7 @@ pip install -e '.[test]'
 Python sürümüne özel paket gerekebilir:
 
 ```bash
-sudo apt install python3.13-venv
+su -c 'apt install python3.13-venv'
 ```
 
 `--break-system-packages` kullanılması önerilmez; sistem Python paketlerini
@@ -141,7 +141,7 @@ bozabilir.
 ### Systemd Kurulumu
 
 ```bash
-sudo scripts/install-systemd.sh
+su -c 'cd /path/to/uthere && scripts/install-systemd.sh'
 ```
 
 Kurulum betiği şunları yapar:
@@ -156,18 +156,18 @@ Kurulum betiği şunları yapar:
 Systemd kurulumu sistem modudur. Servis varsayılan olarak `root` kullanıcısıyla
 çalışır, `/var/lib/uthere/uthere.db` veritabanını kullanır ve ayarları
 `/etc/default/uthere` dosyasından okur. Servis veritabanını okuyan veya yazan CLI
-komutları için `sudo uthere ...` kullanın:
+komutlarını root shell üzerinden çalıştırın:
 
 ```bash
-sudo uthere add example.com --type ping --interval 60
-sudo uthere list
-sudo uthere check all
+su -c 'uthere add example.com --type ping --interval 60'
+su -c 'uthere list'
+su -c 'uthere check all'
 ```
 
 Servisi farklı bir kullanıcıyla çalıştırmak için:
 
 ```bash
-sudo UTHERE_SERVICE_USER=anc scripts/install-systemd.sh
+su -c 'cd /path/to/uthere && UTHERE_SERVICE_USER=anc scripts/install-systemd.sh'
 ```
 
 ### Kullanıcı Modu Kurulumu
@@ -323,7 +323,7 @@ Systemd kurulumunda bu değişkenler `/etc/default/uthere` dosyasına yazılır 
 sonrasında servis yeniden başlatılır:
 
 ```bash
-sudo systemctl restart uthere
+su -c 'systemctl restart uthere'
 ```
 
 ## Test

@@ -28,11 +28,11 @@ WhatsApp when a monitor becomes unhealthy.
 
 ```bash
 # Install Python venv support, pip, pytest, and ping.
-sudo apt install python3-full python3-venv python3-pip python3-pytest iputils-ping
+su -c 'apt install python3-full python3-venv python3-pip python3-pytest iputils-ping'
 
 # If `python3 -m venv .venv` still reports that ensurepip is unavailable,
 # install the venv package for your exact Python version. Example for Python 3.13:
-sudo apt install python3.13-venv
+su -c 'apt install python3.13-venv'
 ```
 
 ### Project setup for Debian/Ubuntu systems that enforce PEP 668:
@@ -81,9 +81,15 @@ want to install into the system Python environment.
 Install as a Linux systemd service:
 
 ```bash
-sudo scripts/install-systemd.sh
+su -c 'cd /path/to/uthere && scripts/install-systemd.sh'
 systemctl status uthere
 journalctl -u uthere -f
+```
+
+Install directly from GitHub into `/opt/uthere` and start the systemd service:
+
+```bash
+su -c 'curl -fsSL https://raw.githubusercontent.com/QueryVS/uthere/main/scripts/install.sh | bash'
 ```
 
 Systemd installation is system mode:
@@ -91,20 +97,20 @@ Systemd installation is system mode:
 - The service runs as `root` by default.
 - The database is `/var/lib/uthere/uthere.db` by default.
 - Configuration is read from `/etc/default/uthere`.
-- Use `sudo uthere ...` when reading or writing the service database.
+- Run `uthere ...` from a root shell when reading or writing the service database.
 
 Examples:
 
 ```bash
-sudo uthere add example.com --type ping --interval 60
-sudo uthere list
-sudo uthere check all
+su -c 'uthere add example.com --type ping --interval 60'
+su -c 'uthere list'
+su -c 'uthere check all'
 ```
 
 To run the service as another user, pass `UTHERE_SERVICE_USER` during install:
 
 ```bash
-sudo UTHERE_SERVICE_USER=anc scripts/install-systemd.sh
+su -c 'cd /path/to/uthere && UTHERE_SERVICE_USER=anc scripts/install-systemd.sh'
 ```
 
 User-mode installation:
@@ -121,7 +127,7 @@ When the installer is run without root privileges, it installs only the CLI:
 
 User mode is not a background service. It only runs when you call commands like
 `uthere add`, `uthere check`, or `uthere list`. For continuous interval checks,
-install system mode with `sudo scripts/install-systemd.sh`.
+install system mode with `su -c 'cd /path/to/uthere && scripts/install-systemd.sh'`.
 
 If records stay `unknown`, they have not been checked yet. Check these first:
 
@@ -134,8 +140,8 @@ uthere --help
 cat /etc/default/uthere
 
 # If the service database is /var/lib/uthere/uthere.db, use the same DB manually:
-sudo uthere --db /var/lib/uthere/uthere.db list
-sudo uthere --db /var/lib/uthere/uthere.db check
+su -c 'uthere --db /var/lib/uthere/uthere.db list'
+su -c 'uthere --db /var/lib/uthere/uthere.db check'
 ```
 
 The CLI reads `UTHERE_DB` from the environment and, if available, from

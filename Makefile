@@ -27,7 +27,11 @@ install:
 	@echo "  make install-user  # user-home CLI install, runs only when called"
 
 install-root:
-	su -l -c scripts/install-systemd.sh
+	@if [[ "$${EUID}" -eq 0 ]]; then \
+		scripts/install-systemd.sh; \
+	else \
+		su -c 'cd "$(CURDIR)" && scripts/install-systemd.sh'; \
+	fi
 
 install-user:
 	scripts/install-systemd.sh

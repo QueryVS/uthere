@@ -10,13 +10,13 @@ if ! python3 -m venv "${VENV_DIR}"; then
 Python virtualenv could not be created.
 
 On Debian/Ubuntu, the usually missing packages are:
-  sudo apt install python3-venv python3-full
+  su -c 'apt install python3-venv python3-full'
 
 You may need the version-specific package:
-  sudo apt install python3.13-venv
+  su -c 'apt install python3.13-venv'
 
 Then run again:
-  sudo scripts/install-systemd.sh
+  su -c 'cd /path/to/uthere && scripts/install-systemd.sh'
 
 Do not run pip install directly against the system Python. PEP 668 may raise
 the "externally-managed-environment" error.
@@ -64,7 +64,7 @@ EOF
   echo "Database: ${USER_DB_PATH}"
   echo "Socket: ${USER_SOCKET_PATH}"
   echo "This is not a background service. It only runs when you call uthere commands."
-  echo "For continuous background checks, install system mode with: sudo scripts/install-systemd.sh"
+  echo "For continuous background checks, install system mode with: su -c 'cd /path/to/uthere && scripts/install-systemd.sh'"
   exit 0
 fi
 
@@ -149,5 +149,5 @@ echo "CLI: uthere list"
 echo "Database: ${DB_PATH}"
 echo "Service user: ${SERVICE_USER}"
 if [[ "${SERVICE_USER}" == "root" ]]; then
-  echo "Use sudo for CLI commands that write to the service database, for example: sudo uthere list"
+  echo "Run CLI commands that write to the service database from a root shell, for example: su -c 'uthere list'"
 fi

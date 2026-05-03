@@ -121,7 +121,7 @@ On Debian/Ubuntu, if you see `externally-managed-environment`, you are running
 `pip install` against the system Python. Use a virtual environment instead:
 
 ```bash
-sudo apt install python3-venv python3-full
+su -c 'apt install python3-venv python3-full'
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -e '.[test]'
@@ -130,7 +130,7 @@ pip install -e '.[test]'
 You may need the version-specific venv package:
 
 ```bash
-sudo apt install python3.13-venv
+su -c 'apt install python3.13-venv'
 ```
 
 Avoid `--break-system-packages`; it can damage system-managed Python packages.
@@ -138,7 +138,7 @@ Avoid `--break-system-packages`; it can damage system-managed Python packages.
 ### Systemd Installation
 
 ```bash
-sudo scripts/install-systemd.sh
+su -c 'cd /path/to/uthere && scripts/install-systemd.sh'
 ```
 
 The installer:
@@ -152,19 +152,19 @@ The installer:
 
 Systemd installation is system mode. The service runs as `root` by default,
 uses `/var/lib/uthere/uthere.db`, and reads configuration from
-`/etc/default/uthere`. Use `sudo uthere ...` for CLI commands that read or write
-the service database:
+`/etc/default/uthere`. Run `uthere ...` from a root shell for CLI commands that
+read or write the service database:
 
 ```bash
-sudo uthere add example.com --type ping --interval 60
-sudo uthere list
-sudo uthere check all
+su -c 'uthere add example.com --type ping --interval 60'
+su -c 'uthere list'
+su -c 'uthere check all'
 ```
 
 To run the service as another user:
 
 ```bash
-sudo UTHERE_SERVICE_USER=anc scripts/install-systemd.sh
+su -c 'cd /path/to/uthere && UTHERE_SERVICE_USER=anc scripts/install-systemd.sh'
 ```
 
 ### User-Mode Installation
@@ -320,7 +320,7 @@ For systemd installations, put these variables in `/etc/default/uthere` and
 restart the service:
 
 ```bash
-sudo systemctl restart uthere
+su -c 'systemctl restart uthere'
 ```
 
 ## Testing
